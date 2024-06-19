@@ -37,13 +37,15 @@ def get_status(task_id:str,url:str):
     filename = f"/media/amari/SSD T7/steamunlockedgames/{url.split('&')[-1].split('=')[-1]}"
     print(filename)
     progress = r.get(f"{filename}-progress")
+ 
+    progress = progress.decode("utf-8") if progress else "0"
     print(progress)
     result = {
         "task_id": task_id,
         "task_status": task_result.status,
         "task_result": task_result.result,
         "filename":filename,
-        "progress":progress.decode("utf-8")
+        "progress":progress
     }
     return JSONResponse(result)
 

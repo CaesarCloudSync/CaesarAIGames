@@ -153,10 +153,10 @@ class CaesarAIGames:
                                 downloaded += len(chunk)
                                 progress = str(((downloaded / size) *100))
                                 self.r.set(f"{filename}-progress",progress)
-                                if notification_dict.get(f"not_{int(math.floor(progress))}") == "":
+                                if notification_dict.get(f"not_{int(math.floor(float(progress)))}") == "":
                                     game_name = filename.replace("/media/amari/SSD T7/steamunlockedgames/","").replace(".zip","")
-                                    CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"{game_name} Progress:{progress}","message":f"{game_name} Progress:{progress}"})
-                                    notification_dict[f"not_{int(math.floor(progress))}"] = "sent"
+                                    CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"{game_name} - Progress: {progress}%","message":f"{game_name} - Progress: {progress}%"})
+                                    notification_dict[f"not_{int(math.floor(float(progress)))}"] = "sent"
                                 #print(((downloaded / size) *100))
                                 # TODO Store redis progress here
                                 #yield str(((downloaded / size) *100))
