@@ -51,10 +51,3 @@ def get_status(task_id:str,url:str):
 
 if __name__ == "__main__":
     uvicorn.run("main:app",port=8080,log_level="info")
-"""
-
-
-
-
-for percent in caesraigames.download(url,filename=filename):
-    print(percent)"""
