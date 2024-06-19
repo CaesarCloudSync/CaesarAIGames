@@ -2,7 +2,7 @@ import argparse
 import os.path
 
 from .__init__ import __version__
-from .downloader import download
+from .CaesarAIGames import download
 
 
 class _ShowVersionAction(argparse.Action):

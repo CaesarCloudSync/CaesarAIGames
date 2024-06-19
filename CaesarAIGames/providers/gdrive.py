@@ -9,8 +9,8 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from robust_downloader.constants import USER_AGENT
-from robust_downloader.utils import get_pylogger
+from CaesarAIGames.constants import USER_AGENT
+from CaesarAIGames.utils import get_pylogger
 
 log = get_pylogger(__name__)
 
