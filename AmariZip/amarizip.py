@@ -25,5 +25,5 @@ def extractall(fzip, dest, desc="Extracting"):
                 with zipf.open(i) as fi, open(fspath(dest / i.filename), "wb") as fo:
                     copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
 
-with open(doc,"rb") as zf:
-    extractall(zf,"/media/amari/SSD T7/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06_Test")
+#with open(doc,"rb") as zf:
+extractall(doc,"/media/amari/SSD T7/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06_Test")

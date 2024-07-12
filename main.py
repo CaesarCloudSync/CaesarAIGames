@@ -48,6 +48,14 @@ def get_status(task_id:str,url:str):
         "progress":progress
     }
     return JSONResponse(result)
+@app.get("/cancel_task")
+async def cancel_task(task_id:str):
+    try:
+        task_result = AsyncResult(task_id)
+        task_result.revoke(terminate=True)
+        return {"message":f"{task_id} was cancelled."}
+    except Exception as ex:
+        return {"error":f"{type(ex)},{ex}"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app",port=8080,log_level="info")
