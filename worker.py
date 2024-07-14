@@ -10,8 +10,8 @@ celery.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:
 celery.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
 
 @celery.task(name="create_task")
-def create_task(url):
-    filename = url.split("&")[-1].split("=")[-1]
+def create_task(url,filename):
+
     print(filename,"ham")
     caesaraigames.download(url,filename=f"/media/amari/SSD T7/steamunlockedgames/{filename}")
     return True

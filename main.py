@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from worker import create_task
 from celery.result import AsyncResult
 import redis
+from GamesModel.GamesModel import GameModel,ProgressModel
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -22,20 +23,28 @@ r = redis.Redis(host="redis")
 @app.get('/')# GET # allow all origins all methods.
 async def index():
     return "Welcome to CaesarAIGames Template. Hello"
-@app.get('/api/v1/downloadgame')# GET # allow all origins all methods.
-async def downloadgame(url:str):
+@app.post('/api/v1/downloadgame')# GET # allow all origins all methods.
+async def downloadgame(gamesmodel: GameModel):
     try:
-        task = create_task.delay(url)
-        return JSONResponse({"task_id": task.id})
+        gamesmodel = gamesmodel.model_dump()
+        url = gamesmodel["url"]
+        filename = url.split("&")[-1].split("=")[-1]
+        print(filename,"Lesy")
+        task = create_task.delay(url,filename)
+        return JSONResponse({"task_id": task.id,"filename":filename.replace(".zip","").replace(".","_",100)})
     except Exception as ex:
         return {"error":f"{type(ex)},{ex}"}
 
-@app.get("/tasks")
-def get_status(task_id:str,url:str):
+@app.post("/tasks")
+def get_status(progressmodel:ProgressModel):
+    progressmodel = progressmodel.model_dump()
+    task_id = progressmodel["task_id"]
+    name = progressmodel["filename"]
+    name = name.replace("_",".",100) + ".zip"
     task_result = AsyncResult(task_id)
-  
-    filename = f"/media/amari/SSD T7/steamunlockedgames/{url.split('&')[-1].split('=')[-1]}"
-    print(filename)
+
+    filename = f"/media/amari/SSD T7/steamunlockedgames/{name}"
+    print(filename,"lester")
     progress = r.get(f"{filename}-progress")
  
     progress = progress.decode("utf-8") if progress else "0"
