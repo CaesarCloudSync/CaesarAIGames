@@ -10,6 +10,7 @@ from worker import create_task
 from celery.result import AsyncResult
 import redis
 from GamesModel.GamesModel import GameModel,ProgressModel
+from CaesarAIEmail.CaesarAIEmail import CaesarAIEmail
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -33,29 +34,34 @@ async def downloadgame(gamesmodel: GameModel):
         task = create_task.delay(url,filename)
         return JSONResponse({"task_id": task.id,"filename":filename})
     except Exception as ex:
+        CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Download {filename} Raspberry Pi Error - {filename}","message":f"{filename} Error: {type(ex)},{ex}"})
         return {"error":f"{type(ex)},{ex}"}
 
 @app.post("/tasks")
 def get_status(progressmodel:ProgressModel):
-    progressmodel = progressmodel.model_dump()
-    task_id = progressmodel["task_id"]
-    filename = progressmodel["filename"]
+    try:
+        progressmodel = progressmodel.model_dump()
+        task_id = progressmodel["task_id"]
+        filename = progressmodel["filename"]
 
-    task_result = AsyncResult(task_id)
+        task_result = AsyncResult(task_id)
 
-    filename = f"/media/amari/SSD T7/steamunlockedgames/{filename}"
-    print(filename,"lester")
-    progress = r.get(f"{filename}-progress")
- 
-    progress = progress.decode("utf-8") if progress else "0"
-    print(progress,"progress")
-    result = {
-        "task_id": task_id,
-        "task_status": task_result.status,
-        "task_result": task_result.result,
-        "progress":progress
-    }
-    return JSONResponse(result)
+        filename = f"/media/amari/SSD T7/steamunlockedgames/{filename}"
+        print(filename,"lester")
+        progress = r.get(f"{filename}-progress")
+    
+        progress = progress.decode("utf-8") if progress else "0"
+        print(progress,"progress")
+        result = {
+            "task_id": task_id,
+            "task_status": task_result.status,
+            "task_result": task_result.result,
+            "progress":progress
+        }
+        return JSONResponse(result)
+    except Exception as ex:
+        CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Tasks Progress {filename} Raspberry Pi Error - {progress}%","message":f"{filename} Error: {type(ex)},{ex} - Progress: {progress}%"})
+        return {"error":f"{type(ex)},{ex}"}
 @app.get("/cancel_task")
 async def cancel_task(task_id:str):
     try:
@@ -63,6 +69,7 @@ async def cancel_task(task_id:str):
         task_result.revoke(terminate=True)
         return {"message":f"{task_id} was cancelled."}
     except Exception as ex:
+        CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Cancel {task_id} Raspberry Pi Error ","message":f" Error: {type(ex)},{ex}, Task ID: {task_id}"})
         return {"error":f"{type(ex)},{ex}"}
 
 if __name__ == "__main__":
