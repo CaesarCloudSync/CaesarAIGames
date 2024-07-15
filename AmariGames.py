@@ -15,7 +15,7 @@ class AmariGames:
         with open("task_id.json") as f:
             task_json = json.load(f)
         print(task_json)
-        responsestatus = requests.post(f"{uri}:8080/tasks",json={"task_id":task_json["task_id"],"filename":"Lies.of.P"})
+        responsestatus = requests.post(f"{uri}:8080/tasks",json={"task_id":"b9272267-0287-46b5-83a9-03307adeaa93","filename":"Lies.of.P.zip"})
         print(responsestatus.json())
     def cancel_task(self):
         with open("task_id.json") as f:
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     uri = "http://localhost"
     url ="https://download167.uploadhaven.com/1/application/zip/E0JERlmVtKgW7hWIs4ktacrDGNHacMKfjVmMrQYu.zip?key=Yujw_v9QTVEii4gPsT3eIQ&expire=1721077463&filename=Lies.of.P.zip"
     amg = AmariGames(uri,url)
-    amg.create_download_task()
-    #amg.get_task_progress()
+    #amg.create_download_task()
+    amg.get_task_progress()
     #time.sleep(40)
     #amg.cancel_task()

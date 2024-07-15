@@ -31,7 +31,7 @@ async def downloadgame(gamesmodel: GameModel):
         filename = url.split("&")[-1].split("=")[-1]
         print(filename,"Lesy")
         task = create_task.delay(url,filename)
-        return JSONResponse({"task_id": task.id,"filename":filename.replace(".zip","").replace(".","_",100)})
+        return JSONResponse({"task_id": task.id,"filename":filename})
     except Exception as ex:
         return {"error":f"{type(ex)},{ex}"}
 
@@ -39,21 +39,20 @@ async def downloadgame(gamesmodel: GameModel):
 def get_status(progressmodel:ProgressModel):
     progressmodel = progressmodel.model_dump()
     task_id = progressmodel["task_id"]
-    name = progressmodel["filename"]
-    name = name.replace("_",".",100) + ".zip"
+    filename = progressmodel["filename"]
+
     task_result = AsyncResult(task_id)
 
-    filename = f"/media/amari/SSD T7/steamunlockedgames/{name}"
+    filename = f"/media/amari/SSD T7/steamunlockedgames/{filename}"
     print(filename,"lester")
     progress = r.get(f"{filename}-progress")
  
     progress = progress.decode("utf-8") if progress else "0"
-    print(progress)
+    print(progress,"progress")
     result = {
         "task_id": task_id,
         "task_status": task_result.status,
         "task_result": task_result.result,
-        "filename":filename,
         "progress":progress
     }
     return JSONResponse(result)
