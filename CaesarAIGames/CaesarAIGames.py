@@ -18,6 +18,13 @@ import math
 
 log = get_pylogger(__name__)
 
+class CaesarAIGamesTools:
+    @staticmethod
+    def extract_filename_steamunlocked(url):
+        filename = url.split("&")[-1].split("=")[-1]
+        return filename
+    def extract_filename_steamrip(self):
+        pass
 class CaesarAIGames:
     def __init__(self) -> None:
         self.r = redis.Redis(host="redis")

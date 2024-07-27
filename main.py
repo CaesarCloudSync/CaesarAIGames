@@ -11,6 +11,7 @@ from celery.result import AsyncResult
 import redis
 from GamesModel.GamesModel import GameModel,ProgressModel
 from CaesarAIEmail.CaesarAIEmail import CaesarAIEmail
+from CaesarAIGames.CaesarAIGames import CaesarAIGamesTools
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -29,7 +30,9 @@ async def downloadgame(gamesmodel: GameModel):
     try:
         gamesmodel = gamesmodel.model_dump()
         url = gamesmodel["url"]
-        filename = url.split("&")[-1].split("=")[-1]
+        #if "uploadhaven" in url:
+        filename = CaesarAIGamesTools.extract_filename_steamunlocked(url)
+        
         print(filename,"Lesy")
         task = create_task.delay(url,filename)
         return JSONResponse({"task_id": task.id,"filename":filename})
