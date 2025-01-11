@@ -1,12 +1,14 @@
 version: '3.8'
 
 services:
+  
 
   web:
+    restart: always
     build: .
     ports:
-      - 8080:8080
-    command: uvicorn main:app --host 0.0.0.0 --reload --port 8080
+      - 8082:8082
+    command: uvicorn main:app --host 0.0.0.0 --reload --port 8082
     volumes:
       - .:/usr/src/app
     environment:
@@ -16,6 +18,7 @@ services:
       - redis
 
   worker:
+    restart: always
     build: .
     command: celery -A worker.celery worker --loglevel=info
     volumes:
@@ -29,6 +32,7 @@ services:
       - redis
 
   redis:
+    restart: always
     image: redis:7
     ports:
       - 6379:6379

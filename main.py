@@ -76,4 +76,4 @@ async def cancel_task(task_id:str):
         return {"error":f"{type(ex)},{ex}"}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app",port=8080,log_level="info")
+    uvicorn.run("main:app",port=8082,log_level="info")
