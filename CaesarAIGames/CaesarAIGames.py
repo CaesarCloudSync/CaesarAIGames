@@ -106,7 +106,7 @@ class CaesarAIGames:
         # Check if file is already present locally
         if md5 is not None or sha256 is not None and self.check_integrity(fpath, md5, sha256):
             log.info("Using downloaded and verified file: " + fpath)
-            self.r.set(f"{filename}-result","already exists using md5")
+            self.r.hset(f"current-download:",filename,"already exists using md5")
             
 
         # Get file size
@@ -117,13 +117,13 @@ class CaesarAIGames:
         size = int(session.get(url, stream=True).headers["Content-Length"])
         if downloaded == size:
             log.info("File %s already downloaded", filename)
-            self.r.set(f"{filename}-result","file already downloaded")
+            self.r.hset(f"current-download:",filename,"file already downloaded")
         elif downloaded > size:
             log.warning(
                 "File %s may be corrupted. It is recommended to re-try downloading it."
                 % filename
             )
-            self.r.set(f"{filename}-result","file may be corrupted")
+            self.r.hset(f"current-download:",filename,"file may be corrupted")
 
         log.info("Downloading %s to %s (%s)", url, filename, self.format_bytes(size))
 
@@ -159,7 +159,7 @@ class CaesarAIGames:
                                 f.write(chunk)
                                 downloaded += len(chunk)
                                 progress = str(((downloaded / size) *100))
-                                self.r.set(f"{filename}-progress",progress)
+                                self.r.hset(f"current-download:",filename,progress)
                                 if notification_dict.get(f"not_{int(math.floor(float(progress)))}") == "":
                                     game_name = filename.replace("/media/amari/SSD T7/steamunlockedgames/","").replace(".zip","")
                                     CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"{game_name} - Progress: {progress}%","message":f"{game_name} - Progress: {progress}%"})
@@ -205,7 +205,7 @@ class CaesarAIGames:
                 raise RuntimeError("File not found or corrupted.")
             else:
                 log.info("File integrity verified!")
-        self.r.set(f"{filename}-result","finished")
+        self.r.set(f"current-download:{filename}-result","finished")
 
 
     def robust_wrapper(self,call, retry_max=500, sleep_max=120):

@@ -25,11 +25,9 @@ r = redis.Redis(host="redis")
 @app.get('/')# GET # allow all origins all methods.
 async def index():
     return "Welcome to CaesarAIGames Template. Hello"
-@app.post('/api/v1/downloadgame')# GET # allow all origins all methods.
-async def downloadgame(gamesmodel: GameModel):
+@app.get('/api/v1/downloadgame')# GET # allow all origins all methods.
+async def downloadgame(url:str):
     try:
-        gamesmodel = gamesmodel.model_dump()
-        url = gamesmodel["url"]
         #if "uploadhaven" in url:
         filename = CaesarAIGamesTools.extract_filename_steamunlocked(url)
         
@@ -41,17 +39,14 @@ async def downloadgame(gamesmodel: GameModel):
         return {"error":f"{type(ex)},{ex}"}
 
 @app.post("/tasks")
-def get_status(progressmodel:ProgressModel):
+def get_status(task_id:str,filename:str):
     try:
-        progressmodel = progressmodel.model_dump()
-        task_id = progressmodel["task_id"]
-        filename = progressmodel["filename"]
 
         task_result = AsyncResult(task_id)
 
         filename = f"/media/amari/SSD T7/steamunlockedgames/{filename}"
         print(filename,"lester")
-        progress = r.get(f"{filename}-progress")
+        progress = r.hget(f"current-download:",filename)
     
         progress = progress.decode("utf-8") if progress else "0"
         print(progress,"progress")
@@ -65,6 +60,13 @@ def get_status(progressmodel:ProgressModel):
     except Exception as ex:
         CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Tasks Progress {filename} Raspberry Pi Error - {progress}%","message":f"{filename} Error: {type(ex)},{ex} - Progress: {progress}%"})
         return {"error":f"{type(ex)},{ex}"}
+@app.get("/get_all_tasks")
+async def get_all_tasks():
+    data = r.hgetall("current-download:")
+    print(data)
+    current_downloads = [{key:value} for key,value in data.items()]
+    return {"downloads":current_downloads}
+
 @app.get("/cancel_task")
 async def cancel_task(task_id:str):
     try:
