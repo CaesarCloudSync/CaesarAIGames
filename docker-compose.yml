@@ -23,7 +23,7 @@ services:
     command: celery -A worker.celery worker --loglevel=info
     volumes:
       - .:/usr/src/app
-      - /home/amari/Games:/home/amari/Games
+      - /media/amari/SSD T7:/media/amari/SSD T7
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0

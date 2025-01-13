@@ -44,7 +44,7 @@ def get_status(task_id:str,filename:str):
 
         task_result = AsyncResult(task_id)
 
-        filename = f"/home/amari/Games/steamunlockedgames/{filename}"
+        filename = f"/media/amari/SSD T7/steamunlockedgames/{filename}"
         print(filename,"lester")
         progress = r.hget(f"current-download:",filename)
     
@@ -64,7 +64,7 @@ def get_status(task_id:str,filename:str):
 async def get_all_tasks():
     data = r.hgetall("current-download:")
     print(data)
-    current_downloads = [{key.decode("utf-8").replace("/home/amari/Games/steamunlockedgames/",""):value} for key,value in data.items()]
+    current_downloads = [{key.decode("utf-8").replace("/media/amari/SSD T7/steamunlockedgames/",""):value} for key,value in data.items()]
     return {"downloads":current_downloads}
 
 @app.get("/cancel_task")
