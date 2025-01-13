@@ -2,8 +2,8 @@ import zipfile
 import zlib
 import os
 from tqdm import tqdm
-doc = "/media/amari/SSD T7/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06.zip"
-#doc = "/media/amari/SSD T7/steamunlockedgames/Kingdom.Come.Deliverance.v1.9.6.Incl.ALL.DLC.zip"
+doc = "/home/amari/Games/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06.zip"
+#doc = "/home/amari/Games/steamunlockedgames/Kingdom.Come.Deliverance.v1.9.6.Incl.ALL.DLC.zip"
 from os import fspath
 from pathlib import Path
 from shutil import copyfileobj
@@ -26,4 +26,4 @@ def extractall(fzip, dest, desc="Extracting"):
                     copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
 
 #with open(doc,"rb") as zf:
-extractall(doc,"/media/amari/SSD T7/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06_Test")
+extractall(doc,"/home/amari/Games/steamunlockedgames/Sekiro.Shadows.Die.Twice.v1.06_Test")

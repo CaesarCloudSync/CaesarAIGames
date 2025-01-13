@@ -13,5 +13,5 @@ celery.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://lo
 def create_task(url,filename):
 
     print(filename,"ham")
-    caesaraigames.download(url,filename=f"/media/amari/SSD T7/steamunlockedgames/{filename}")
+    caesaraigames.download(url,filename=f"/home/amari/Games/steamunlockedgames/{filename}")
     return True
