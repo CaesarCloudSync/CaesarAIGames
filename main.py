@@ -38,7 +38,7 @@ async def downloadgame(url:str):
         CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Download {filename} Raspberry Pi Error - {filename}","message":f"{filename} Error: {type(ex)},{ex}"})
         return {"error":f"{type(ex)},{ex}"}
 
-@app.post("/tasks")
+@app.get("/tasks")
 def get_status(task_id:str,filename:str):
     try:
 
@@ -64,7 +64,7 @@ def get_status(task_id:str,filename:str):
 async def get_all_tasks():
     data = r.hgetall("current-download:")
     print(data)
-    current_downloads = [{key:value} for key,value in data.items()]
+    current_downloads = [{key.replace("/media/amari/SSD T7/steamunlockedgames/",""):value} for key,value in data.items()]
     return {"downloads":current_downloads}
 
 @app.get("/cancel_task")
