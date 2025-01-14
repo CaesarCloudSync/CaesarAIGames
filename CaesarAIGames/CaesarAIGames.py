@@ -159,7 +159,7 @@ class CaesarAIGames:
                                 f.write(chunk)
                                 downloaded += len(chunk)
                                 progress = str(((downloaded / size) *100))
-                                self.r.hset(f"current-download:",filename,progress)
+                                self.r.hset(f"current-download:",filename.replace("/media/amari/SSD T7/steamunlockedgames/",""),progress)
                                 if notification_dict.get(f"not_{int(math.floor(float(progress)))}") == "":
                                     game_name = filename.replace("/media/amari/SSD T7/steamunlockedgames/","").replace(".zip","")
                                     CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"{game_name} - Progress: {progress}%","message":f"{game_name} - Progress: {progress}%"})
