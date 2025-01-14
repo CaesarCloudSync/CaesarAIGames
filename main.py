@@ -25,9 +25,11 @@ r = redis.Redis(host="redis")
 @app.get('/')# GET # allow all origins all methods.
 async def index():
     return "Welcome to CaesarAIGames Template. Hello"
-@app.get('/api/v1/downloadgame')# GET # allow all origins all methods.
-async def downloadgame(url:str):
+@app.post('/api/v1/downloadgame')# GET # allow all origins all methods.
+async def downloadgame(gamemodel : GameModel):
     try:
+        gamemodel = gamemodel.model_dump()
+        url = gamemodel["url"]
         #if "uploadhaven" in url:
         filename = CaesarAIGamesTools.extract_filename_steamunlocked(url)
         
