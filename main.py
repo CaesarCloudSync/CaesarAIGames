@@ -35,6 +35,7 @@ async def downloadgame(gamemodel : GameModel):
         
         print(filename,"Lesy")
         task = create_task.delay(url,filename)
+        r.hset(f"current-download-task-id:",filename,task.id)
         return JSONResponse({"task_id": task.id,"filename":filename})
     except Exception as ex:
         CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Download {filename} Raspberry Pi Error - {filename}","message":f"{filename} Error: {type(ex)},{ex}"})
@@ -70,8 +71,9 @@ async def get_all_tasks():
     return {"downloads":current_downloads}
 
 @app.get("/cancel_task")
-async def cancel_task(task_id:str):
+async def cancel_task(filename:str):
     try:
+        task_id = r.hget(f"current-download-task-id:",filename).decode("utf-8")
         task_result = AsyncResult(task_id)
         task_result.revoke(terminate=True)
         return {"message":f"{task_id} was cancelled."}
