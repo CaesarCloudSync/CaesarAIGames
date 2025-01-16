@@ -66,40 +66,52 @@ def get_status(task_id:str,filename:str):
 async def get_all_tasks():
     data = r.hgetall("current-download:")
     print(data)
-    current_downloads = [{key.decode("utf-8"):value} for key,value in data.items()]
+    current_downloads = []
+    for key,value in data.items():
+        filename = key.decode("utf-8")
+        task_id = r.hget(f"current-download-task-id:",filename)
+        paused = "paused" if not task_id else "unpaused"
+        current_downloads.append({filename:value,"paused":paused})
+
     return {"downloads":current_downloads}
 
-@app.get("/pause_task")
-async def pause_task(filename:str):
+@app.get("/pause_download")
+async def pause_download(filename:str):
     try:
-        task_id = r.hget(f"current-download-task-id:",filename).decode("utf-8")
-        task_result = AsyncResult(task_id)
-        task_result.revoke(terminate=True)
+        task_id = r.hget(f"current-download-task-id:",filename)
+        if task_id:
+            task_id = task_id.decode("utf-8")
+            task_result = AsyncResult(task_id)
+            task_result.revoke(terminate=True)
         r.hdel(f"current-download-task-id:",filename)
         return {"message":f"{task_id} was paused."}
     except Exception as ex:
         CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Cancel {task_id} Raspberry Pi Error ","message":f" Error: {type(ex)},{ex}, Task ID: {task_id}"})
         return {"error":f"{type(ex)},{ex}"}
-@app.get("/continue_task")
-async def continue_task(filename:str):
+@app.get("/continue_download")
+async def continue_download(filename:str):
     try:
-        url = r.hget(f"current-download-url:",filename).decode("utf-8")
-        filename = CaesarAIGamesTools.extract_filename_steamunlocked(url)
-        
-        print(filename,"Lesy")
-        task = create_task.delay(url,filename)
-        r.hset(f"current-download-task-id:",filename,task.id)
-        return JSONResponse({"task_id": task.id,"filename":filename})
+        url = r.hget(f"current-download-url:",filename)
+        if url:
+            filename = CaesarAIGamesTools.extract_filename_steamunlocked(url.decode("utf-8"))
+            
+            print(filename,"Lesy")
+            task = create_task.delay(url,filename)
+            r.hset(f"current-download-task-id:",filename,task.id)
+            return JSONResponse({"task_id": task.id,"filename":filename})
+        else:
+            return {"message":"download does not exist cancel your download."}
     except Exception as ex:
         CaesarAIEmail.send(**{"email":"amari.lawal@gmail.com","subject":f"CaesarAI Games Cancel {task_id} Raspberry Pi Error ","message":f" Error: {type(ex)},{ex}, Task ID: {task_id}"})
         return {"error":f"{type(ex)},{ex}"}
 
-@app.get("/cancel_task")
-async def cancel_task(filename:str):
+@app.get("/cancel_download")
+async def cancel_download(filename:str):
     try:
-        task_id = r.hget(f"current-download-task-id:",filename).decode("utf-8")
-        task_result = AsyncResult(task_id)
-        task_result.revoke(terminate=True)
+        task_id = r.hget(f"current-download-task-id:",filename)
+        if task_id:
+            task_result = AsyncResult(task_id.decode("utf-8"))
+            task_result.revoke(terminate=True)
         r.hdel(f"current-download-task-id:",filename)
         r.hdel(f"current-download:",filename)
         r.hdel(f"current-download-url:",filename)
