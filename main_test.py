@@ -58,10 +58,9 @@ class ItemCard(QWidget):
 
         self.setLayout(layout)
 
-        image_id = self.item.get("cover","").get("image_id","")
+        image_id = self.item.get("image_id", "")
         if image_id in self.image_cache:
-            poster_path = "/" + self.item.get("cover","").get("image_id","")  +".jpg"
-            self.set_rounded_image(self.image_cache[poster_path])
+            self.set_rounded_image(self.image_cache[image_id])
             self.image_loaded = True
         else:
             QTimer.singleShot(0, self.fetch_image_async)
@@ -88,8 +87,7 @@ class ItemCard(QWidget):
 
     def fetch_image_async(self):
         if not self.image_loaded:
-            poster_path = "/" + self.item["cover"]["image_id"] +".jpg"
-            image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
+            image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big/{self.item['cover']['image_id']}.jpg"
             request = QNetworkRequest(QUrl(image_url))
             self.network_manager.get(request)
             self.image_loaded = True
@@ -99,8 +97,8 @@ class ItemCard(QWidget):
             image_data = reply.readAll()
             pixmap = QPixmap()
             pixmap.loadFromData(image_data)
-            poster_path = "/" + self.item["cover"]["image_id"] +".jpg"
-            self.image_cache[poster_path] = pixmap
+            image_id = self.item.get("image_id", "")
+            self.image_cache[image_id] = pixmap
             self.set_rounded_image(pixmap)
         else:
             print(f"Failed to load image: {reply.errorString()}")
@@ -198,10 +196,10 @@ class ContentWidget(QWidget):
             response.raise_for_status()
             next_items = response.json().get("games", [])
             for item in next_items:
-                poster_path = "/" + item.get("cover","").get("image_id","") + ".jpg"
-                print(poster_path)
-                if poster_path and poster_path not in self.image_cache:
-                    image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
+                image_id = item.get("cover","").get("image_id","") + ".jpg"
+                if image_id and image_id not in self.image_cache:
+                    image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}"
+                    #print(image_url)
                     request = QNetworkRequest(QUrl(image_url))
                     self.preload_manager.get(request)
         except requests.RequestException as e:
@@ -213,8 +211,9 @@ class ContentWidget(QWidget):
             pixmap = QPixmap()
             pixmap.loadFromData(image_data)
             url = reply.url().toString()
-            poster_path = url.split("/w780")[-1]
-            self.image_cache[poster_path] = pixmap
+            image_id = url.split("/t_cover_big/")[-1].replace(".jpg","")
+            #print(self.image_cache)
+            self.image_cache[image_id] = pixmap
         reply.deleteLater()
 
     def update_carousel(self, new_items):
@@ -347,7 +346,7 @@ class SeasonWidget(QWidget):
 
         layout = QVBoxLayout()
         self.poster = QLabel()
-        self.load_poster(season.get("poster_path"))
+        self.load_poster(season.get("image_id"))
         layout.addWidget(self.poster)
         name = QLabel(season.get("name", "Unknown"))
         name.setStyleSheet("color:white")
@@ -370,9 +369,9 @@ class SeasonWidget(QWidget):
         layout.addWidget(episode_container)
         self.setLayout(layout)
 
-    def load_poster(self, poster_path):
-        if poster_path:
-            url = f"https://images.igdb.com/igdb/image/upload/t_cover_big/{poster_path}"
+    def load_poster(self, image_id):
+        if image_id:
+            url = f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}"
             self.manager = QNetworkAccessManager()
             self.manager.finished.connect(self.on_poster_loaded)
             self.manager.get(QNetworkRequest(QUrl(url)))
@@ -452,8 +451,7 @@ class DetailsWidget(QWidget):
         content_layout.addWidget(back_button, alignment=Qt.AlignLeft)
 
         # Title
-        print(item)
-        title = item.get("name","")
+        title = item.get("title", item.get("name", "Unknown"))
         title_label = QLabel(title)
         title_label.setStyleSheet("color: #FFFFFF; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;")
         title_label.setAlignment(Qt.AlignCenter)
@@ -473,15 +471,11 @@ class DetailsWidget(QWidget):
         poster_label.setGeometry(0, 0, 300, 450)
         poster_label.setScaledContents(True)
         poster_label.setStyleSheet("background-color: #252528; border-radius: 10px;")
-        cover = self.item.get("cover","")
-        if cover:
-            image_id = cover.get("image_id","")
-            if image_id in self.image_cache:
-                poster_path = "/" + image_id  +".jpg"
-                self.set_rounded_image(poster_label, self.image_cache[poster_path])
-            else:
-                poster_path = poster_path = "/" + image_id  +".jpg"
-                self.fetch_image_async(poster_label, poster_path)
+        image_id = self.item.get("image_id", "")
+        if image_id in self.image_cache:
+            self.set_rounded_image(poster_label, self.image_cache[image_id])
+        else:
+            self.fetch_image_async(poster_label, image_id)
         content_layout.addWidget(poster_frame, alignment=Qt.AlignCenter)
 
         # Description
@@ -532,19 +526,19 @@ class DetailsWidget(QWidget):
         painter.end()
         label.setPixmap(rounded)
 
-    def fetch_image_async(self, label, poster_path):
-        image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
+    def fetch_image_async(self, label, image_id):
+        image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}"
         request = QNetworkRequest(QUrl(image_url))
         network_manager = QNetworkAccessManager(self)
-        network_manager.finished.connect(lambda reply: self.on_image_fetched(reply, label, poster_path))
+        network_manager.finished.connect(lambda reply: self.on_image_fetched(reply, label, image_id))
         network_manager.get(request)
 
-    def on_image_fetched(self, reply, label, poster_path):
+    def on_image_fetched(self, reply, label, image_id):
         if reply.error() == QNetworkReply.NoError:
             image_data = reply.readAll()
             pixmap = QPixmap()
             pixmap.loadFromData(image_data)
-            self.image_cache[poster_path] = pixmap
+            self.image_cache[image_id] = pixmap
             self.set_rounded_image(label, pixmap)
         else:
             print(f"Failed to load image: {reply.errorString()}")
@@ -645,7 +639,7 @@ class DetailsWidget(QWidget):
                 "series_name": self.item.get("name"),
                 "streamid": stream_id,
                 "seriesid": self.item.get("id"),
-                "poster_path": self.item.get("poster_path"),
+                "image_id": self.item.get("image_id"),
                 "episode": episode,
                 "season": season,
                 "numofeps": self.number_of_episodes

@@ -108,7 +108,7 @@ class Home(QWidget):
             )
             response.raise_for_status()
             result = response.json()
-            new_films = result.get("results", [])
+            new_films = result.get("game", [])
             self.films.extend(new_films)
             self.update_carousel(new_films)
             self.page_num += 1
