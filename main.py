@@ -199,7 +199,6 @@ class ContentWidget(QWidget):
             next_items = response.json().get("games", [])
             for item in next_items:
                 poster_path = "/" + item.get("cover","").get("image_id","") + ".jpg"
-                print(poster_path)
                 if poster_path and poster_path not in self.image_cache:
                     image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
                     request = QNetworkRequest(QUrl(image_url))
@@ -218,7 +217,6 @@ class ContentWidget(QWidget):
         reply.deleteLater()
 
     def update_carousel(self, new_items):
-        print(len(new_items))
         for i in range(0, len(new_items), 5):
             row_items = new_items[i:i+5]
             row_widget = QWidget()
@@ -254,7 +252,6 @@ class StreamModal(QDialog):
         self.setWindowTitle("Streaming Options")
         self.setStyleSheet("background-color: #18181b; color: #FFFFFF;")
         self.streams = streams
-        print(streams)
         self.series_name = series_name
         self.season = season
         self.episode = episode
@@ -452,7 +449,6 @@ class DetailsWidget(QWidget):
         content_layout.addWidget(back_button, alignment=Qt.AlignLeft)
 
         # Title
-        print(item)
         title = item.get("name","")
         title_label = QLabel(title)
         title_label.setStyleSheet("color: #FFFFFF; font-size: 28px; font-weight: bold; font-family: Arial, sans-serif;")
