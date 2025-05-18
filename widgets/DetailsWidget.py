@@ -113,7 +113,7 @@ class DetailsWidget(QWidget):
 
         # Description
         self.description_label = QLabel()
-        self.description_label.setStyleSheet("color: #FFFFFF; font-size: 25px; font-family: Arial, sans-serif;")
+        self.description_label.setStyleSheet("color: #FFFFFF; font-size: 25px; font-family: Arial, sans-serif; width:100px;")
         self.description_label.setAlignment(Qt.AlignCenter)
         self.description_label.setWordWrap(True)
         content_layout.addWidget(self.description_label)
@@ -143,8 +143,8 @@ class DetailsWidget(QWidget):
         self.setLayout(main_layout)
 
         # Fetch series details if it's a series
-        if item.get("media_type") == "tv" or "first_air_date" in item:
-            self.get_film_details()
+
+        self.get_film_details()
 
     def set_rounded_image(self, label, pixmap, radius=10):
         scaled_pixmap = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -191,16 +191,9 @@ class DetailsWidget(QWidget):
 
     def get_film_details(self):
         try:
-            response = requests.get(
-                f"https://api.themoviedb.org/3/tv/{self.item.get('id')}?language=en-US"
-            )
-            response.raise_for_status()
-            result = response.json()
-            self.number_of_episodes = result.get("number_of_episodes", 0)
-            self.seasons = self.reorder_specials(result.get("seasons", []))
-            self.description = result.get("overview", "No description available.")
+
+            self.description = self.item.get("summary", "No description available.")
             self.description_label.setText(self.description)
-            self.episode_count_label.setText(f"Number of Episodes: {self.number_of_episodes}")
             self.update_seasons()
         except requests.RequestException as e:
             print(f"Error fetching details: {e}")
