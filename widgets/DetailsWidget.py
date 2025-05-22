@@ -8,11 +8,14 @@ from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkRepl
 from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QCursor
 from PyQt5.QtWebSockets import QWebSocket
 from PyQt5.QtGui import QFont,QIcon
+from PyQt5.QtGui import QDesktopServices
 class CustomItemWidget(QWidget):
-    def __init__(self, text, icon_path):
+    def __init__(self, text, icon_path,origin_url, parent=None):
         super().__init__()
+        self.parent_widget = parent
         layout = QHBoxLayout()
         layout.setContentsMargins(5, 0, 5, 0)
+        self.origin_url = origin_url
 
         self.label = QLabel(text)
         self.label.setStyleSheet("color: #FFFFFF; font-family: Arial, sans-serif;")
@@ -22,6 +25,8 @@ class CustomItemWidget(QWidget):
         self.label.setFont(font)
 
         self.icon_button = QPushButton()
+        self.icon_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.icon_button.clicked.connect(self.open_website)
         self.icon_button.setIcon(QIcon(icon_path))
         self.icon_button.setFlat(True)  # Make it look like just an icon
         self.icon_button.setFixedSize(24, 24)
@@ -31,6 +36,11 @@ class CustomItemWidget(QWidget):
         layout.addWidget(self.icon_button)
 
         self.setLayout(layout)
+    def open_website(self):
+        # Redirect to a website
+        self.parent_widget.close_websocket()
+
+        QDesktopServices.openUrl(QUrl(self.origin_url))
 
 class DetailsWidget(QWidget):
     def __init__(self, item, image_cache, main_window, parent=None):
@@ -97,11 +107,11 @@ class DetailsWidget(QWidget):
 
         # Poster
         poster_frame = QFrame()
-        poster_frame.setFixedSize(300, 450)
+        poster_frame.setFixedSize(264, 352)
         poster_frame.setStyleSheet("border-radius: 10px; background-color: #252528; border: none;")
         poster_label = QLabel(poster_frame)
         poster_label.setAlignment(Qt.AlignCenter)
-        poster_label.setGeometry(0, 0, 300, 450)
+        poster_label.setGeometry(0, 0, 264, 352)
         poster_label.setScaledContents(True)
         poster_label.setStyleSheet("background-color: #252528; border-radius: 10px;")
         cover = self.item.get("cover", "")
@@ -325,11 +335,12 @@ class DetailsWidget(QWidget):
             torrent_title = stream.get("title", "Unknown")
             seeders = stream.get("seeders", "Unknown")
             magnet_link = stream.get("magnet_link","No Magnet")
+            origin_url = stream.get("guid","No Origin")
             display_text = f"{torrent_title} | Seeders:{seeders}"
             item = QListWidgetItem()
             item.setData(Qt.UserRole, magnet_link)  # Store stream_id for later use
 
-            item_widget = CustomItemWidget(display_text, "imgs/world-wide-web.png")  # Replace with your icon path
+            item_widget = CustomItemWidget(display_text, "imgs/world-wide-web.png",origin_url,self,)  # Replace with your icon path
 
             self.streams_list.addItem(item)
             self.streams_list.setItemWidget(item, item_widget)

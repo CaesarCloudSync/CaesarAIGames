@@ -24,7 +24,7 @@ class MovieCard(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
 
         self.poster_label = QFrame()
-        self.poster_label.setFixedSize(200, 300)
+        self.poster_label.setFixedSize(264, 352)
         self.poster_label.setStyleSheet("""
             border-radius: 8px;
             background-color: #2a2a2a;
@@ -33,7 +33,7 @@ class MovieCard(QWidget):
 
         self.image_label = QLabel(self.poster_label)
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setGeometry(0, 0, 200, 300)
+        self.image_label.setGeometry(0, 0, 264, 352)
         self.image_label.setStyleSheet("background-color: #2a2a2a;")
 
         self.network_manager = QNetworkAccessManager(self)

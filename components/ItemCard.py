@@ -21,7 +21,7 @@ class ItemCard(QWidget):
         layout.setContentsMargins(10, 10, 10, 10)
 
         self.poster_label = QFrame()
-        self.poster_label.setFixedSize(260, 390)
+        self.poster_label.setFixedSize(264, 352)
         self.poster_label.setStyleSheet("""
             border-radius: 10px;
             background-color: #252528;
@@ -31,7 +31,7 @@ class ItemCard(QWidget):
 
         self.image_label = QLabel(self.poster_label)
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setGeometry(0, 0, 260, 390)
+        self.image_label.setGeometry(0, 0, 264, 352)
         self.image_label.setScaledContents(True)
         self.image_label.setStyleSheet("background-color: #252528; border-radius: 10px;")
 
