@@ -1,12 +1,36 @@
 import json
 import requests
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QScrollArea, QLabel, QFrame, QPushButton, QGridLayout, QListWidget, QListWidgetItem,
+    QWidget, QVBoxLayout, QScrollArea, QLabel, QFrame, QPushButton, QGridLayout, QListWidget, QListWidgetItem,QHBoxLayout
 )
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QCursor
 from PyQt5.QtWebSockets import QWebSocket
+from PyQt5.QtGui import QFont,QIcon
+class CustomItemWidget(QWidget):
+    def __init__(self, text, icon_path):
+        super().__init__()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 0, 5, 0)
+
+        self.label = QLabel(text)
+        self.label.setStyleSheet("color: #FFFFFF; font-family: Arial, sans-serif;")
+        # Set font size
+        font = QFont()
+        font.setPointSize(11)
+        self.label.setFont(font)
+
+        self.icon_button = QPushButton()
+        self.icon_button.setIcon(QIcon(icon_path))
+        self.icon_button.setFlat(True)  # Make it look like just an icon
+        self.icon_button.setFixedSize(24, 24)
+
+        layout.addWidget(self.label)
+        layout.addStretch()
+        layout.addWidget(self.icon_button)
+
+        self.setLayout(layout)
 
 class DetailsWidget(QWidget):
     def __init__(self, item, image_cache, main_window, parent=None):
@@ -38,7 +62,7 @@ class DetailsWidget(QWidget):
         # Create a content widget to hold all the content
         content_widget = QWidget()
         content_layout = QVBoxLayout()
-        content_layout.setSpacing(20)
+        content_layout.setSpacing(1)
         content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout.setAlignment(Qt.AlignTop)
 
@@ -93,7 +117,7 @@ class DetailsWidget(QWidget):
 
         # Description
         self.description_label = QLabel()
-        self.description_label.setStyleSheet("color: #FFFFFF; font-size: 25px; font-family: Arial, sans-serif; width:100px;")
+        self.description_label.setStyleSheet("color: #FFFFFF; font-size: 20px; font-family: Arial, sans-serif; width:100px;")
         self.description_label.setAlignment(Qt.AlignCenter)
         self.description_label.setWordWrap(True)
         content_layout.addWidget(self.description_label)
@@ -104,11 +128,7 @@ class DetailsWidget(QWidget):
         self.episode_count_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(self.episode_count_label)
 
-        # Seasons
-        self.seasons_widget = QWidget()
-        self.seasons_layout = QGridLayout()
-        self.seasons_widget.setLayout(self.seasons_layout)
-        content_layout.addWidget(self.seasons_widget, stretch=1)
+
 
         # Streams container
         self.streams_label = QLabel("Streaming Options")
@@ -120,7 +140,7 @@ class DetailsWidget(QWidget):
         self.streams_list = QListWidget()
         self.streams_list.setStyleSheet("""
             QListWidget { background-color: #18181b; border: none; color: #FFFFFF; font-size: 16px; font-family: Arial, sans-serif; }
-            QListWidget::item { padding: 10px; border-bottom: 1px solid #252528; }
+            QListWidget::item { padding: 10px; border-bottom: 1px solid #252528;}
             QListWidget::item:hover { background-color: #3a3a3c; }
             QListWidget::item:selected { background-color: #4a4a4c; }
         """)
@@ -254,9 +274,13 @@ class DetailsWidget(QWidget):
             seeders = stream.get("seeders", "Unknown")
             magnet_link = stream.get("magnet_link","No Magnet")
             display_text = f"{torrent_title} | Seeders:{seeders}"
-            item = QListWidgetItem(display_text)
+            item = QListWidgetItem()
             item.setData(Qt.UserRole, magnet_link)  # Store stream_id for later use
+
+            item_widget = CustomItemWidget(display_text, "imgs/world-wide-web.png")  # Replace with your icon path
+
             self.streams_list.addItem(item)
+            self.streams_list.setItemWidget(item, item_widget)
 
         self.streams_label.setText(f"Streaming Options (Total: {self.total_streams})")
         self.streams_list.show()
