@@ -1,0 +1,3 @@
+1. Improve design
+2. Make it so that when clicking the settings button the I can search for the saved game file. 
+Then link it to the app, by just storing the url in the app. Then the app can store that folder in the cloud using backup.

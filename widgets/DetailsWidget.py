@@ -184,8 +184,51 @@ class DetailsWidget(QWidget):
         backup_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
         self.media_usage_layout.addWidget(backup_button)
 
+        # Backup button (icon-only)
+        library_button = QPushButton()
+        library_button.setFixedSize(32, 32)  # Set size to fit the icon
+        library_button.setCursor(QCursor(Qt.PointingHandCursor))
+        library_button.setFlat(True)  # Remove button shape
+        library_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;  /* No background */
+                border: none;  /* No border */
+                padding: 0px;  /* No padding */
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
+                border-radius: 6px;  /* Rounded hover effect */
+            }
+        """)
+        library_button.setIcon(QIcon("imgs/not_saved.png"))
+        library_button.setIconSize(QSize(24, 24))  # Adjust icon size
+        library_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        self.media_usage_layout.addWidget(library_button)
+
         # Add stretch to push buttons to the left
         self.media_usage_layout.addStretch()
+        
+        # Backup button (icon-only)
+        settings_button = QPushButton()
+        settings_button.setFixedSize(32, 32)  # Set size to fit the icon
+        settings_button.setCursor(QCursor(Qt.PointingHandCursor))
+        settings_button.setFlat(True)  # Remove button shape
+        settings_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;  /* No background */
+                border: none;  /* No border */
+                padding: 0px;  /* No padding */
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
+                border-radius: 6px;  /* Rounded hover effect */
+            }
+        """)
+        settings_button.setIcon(QIcon("imgs/settings.png"))
+        settings_button.setIconSize(QSize(24, 24))  # Adjust icon size
+        settings_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        self.media_usage_layout.addWidget(settings_button)
+
 
         content_layout.addLayout(self.media_usage_layout)
 

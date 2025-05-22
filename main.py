@@ -39,7 +39,7 @@ class SeriesWidget(ContentWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("CaesarAIMoviesStream")
+        self.setWindowTitle("CaesarAIGames")
         self.setStyleSheet("background-color: #18181b;")
         self.setMinimumSize(1900, 1080)
         self.setWindowIcon(QIcon("imgs/CaesarAIMoviesLogo.png"))  # Replace with your icon path
@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         title_layout.addWidget(logo_label)
 
         # Title label
-        title_label = QLabel("CaesarAIMoviesStream")
+        title_label = QLabel("CaesarAIGames")
         title_label.setStyleSheet("color: #FFFFFF; font-size: 20px; font-weight: bold;font-family:Calibri;")
         title_layout.addWidget(title_label)
         title_layout.addStretch()
