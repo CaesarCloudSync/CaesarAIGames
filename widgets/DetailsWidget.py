@@ -3,7 +3,7 @@ import requests
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QScrollArea, QLabel, QFrame, QPushButton, QGridLayout, QListWidget, QListWidgetItem,QHBoxLayout
 )
-from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtCore import Qt, QUrl,QSize
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QCursor
 from PyQt5.QtWebSockets import QWebSocket
@@ -121,13 +121,63 @@ class DetailsWidget(QWidget):
         self.description_label.setAlignment(Qt.AlignCenter)
         self.description_label.setWordWrap(True)
         content_layout.addWidget(self.description_label)
+        
+        # Media usage layout for Play and Backup buttons
+        self.media_usage_layout = QHBoxLayout()
+        self.media_usage_layout.setContentsMargins(0, 10, 0, 20)  # Adjusted margins for better spacing
+        self.media_usage_layout.setSpacing(10)  # Space between buttons
+        self.media_usage_layout.setAlignment(Qt.AlignLeft)  # Align buttons to the left
 
-        # Episode count
-        self.episode_count_label = QLabel()
-        self.episode_count_label.setStyleSheet("color: #FFFFFF; font-size: 16px; font-family: Arial, sans-serif;")
-        self.episode_count_label.setAlignment(Qt.AlignCenter)
-        content_layout.addWidget(self.episode_count_label)
 
+
+        # Play button
+        play_button = QPushButton("Play")
+        play_button.setFixedWidth(100)
+        play_button.setCursor(QCursor(Qt.PointingHandCursor))
+        play_button.setStyleSheet("""
+            QPushButton {
+                color: #FFFFFF;
+                background-color: #28a745;  /* Green background for Play */
+                border: none;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #218838;  /* Darker green on hover */
+            }
+        """)
+        play_button.setIcon(QIcon("imgs/play.png"))
+        play_button.setIconSize(QSize(16, 16))
+        play_button.clicked.connect(self.play_game)
+        self.media_usage_layout.addWidget(play_button)
+
+        # Backup button (icon-only)
+        backup_button = QPushButton()
+        backup_button.setFixedSize(32, 32)  # Set size to fit the icon
+        backup_button.setCursor(QCursor(Qt.PointingHandCursor))
+        backup_button.setFlat(True)  # Remove button shape
+        backup_button.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;  /* No background */
+                border: none;  /* No border */
+                padding: 0px;  /* No padding */
+            }
+            QPushButton:hover {
+                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
+                border-radius: 6px;  /* Rounded hover effect */
+            }
+        """)
+        backup_button.setIcon(QIcon("imgs/cloud_backup.png"))
+        backup_button.setIconSize(QSize(24, 24))  # Adjust icon size
+        backup_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        self.media_usage_layout.addWidget(backup_button)
+
+        # Add stretch to push buttons to the left
+        self.media_usage_layout.addStretch()
+
+        content_layout.addLayout(self.media_usage_layout)
 
 
         # Streams container
@@ -163,6 +213,8 @@ class DetailsWidget(QWidget):
         # Fetch series details
         if item.get("name"):
             self.get_film_details()
+    def play_game(self):
+        pass
 
     def set_rounded_image(self, label, pixmap, radius=10):
         scaled_pixmap = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
