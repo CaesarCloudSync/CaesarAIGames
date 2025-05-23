@@ -118,7 +118,7 @@ class SettingsDialog(QDialog):
 
     def save_settings(self):
         caesaraigmscrud  = CaesarAIGamesCRUD()
-        settings = Settings.model_validate({"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})git a
+        settings = Settings.model_validate({"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})
         caesaraigmscrud.post_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME)
 
 
