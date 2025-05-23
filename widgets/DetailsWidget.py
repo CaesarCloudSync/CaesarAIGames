@@ -1,16 +1,19 @@
 import json
 import requests
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QScrollArea, QLabel, QFrame, QPushButton, QGridLayout, QListWidget, QListWidgetItem,QHBoxLayout
+    QWidget, QVBoxLayout, QScrollArea, QLabel, QFrame, QPushButton, QGridLayout, QListWidget, QListWidgetItem, QHBoxLayout,
+    QDialog, QPushButton, QFileDialog, QFormLayout
 )
-from PyQt5.QtCore import Qt, QUrl,QSize
+from PyQt5.QtCore import Qt, QUrl, QSize
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QCursor
+from PyQt5.QtGui import QPixmap, QPainter, QPainterPath, QCursor, QFont, QIcon
 from PyQt5.QtWebSockets import QWebSocket
-from PyQt5.QtGui import QFont,QIcon
 from PyQt5.QtGui import QDesktopServices
+import os
+from services.DB import CaesarAIGamesCRUD
+from services.Models import Settings
 class CustomItemWidget(QWidget):
-    def __init__(self, text, icon_path,origin_url, parent=None):
+    def __init__(self, text, icon_path, origin_url, parent=None):
         super().__init__()
         self.parent_widget = parent
         layout = QHBoxLayout()
@@ -19,7 +22,6 @@ class CustomItemWidget(QWidget):
 
         self.label = QLabel(text)
         self.label.setStyleSheet("color: #FFFFFF; font-family: Arial, sans-serif;")
-        # Set font size
         font = QFont()
         font.setPointSize(11)
         self.label.setFont(font)
@@ -28,7 +30,7 @@ class CustomItemWidget(QWidget):
         self.icon_button.setCursor(QCursor(Qt.PointingHandCursor))
         self.icon_button.clicked.connect(self.open_website)
         self.icon_button.setIcon(QIcon(icon_path))
-        self.icon_button.setFlat(True)  # Make it look like just an icon
+        self.icon_button.setFlat(True)
         self.icon_button.setFixedSize(24, 24)
 
         layout.addWidget(self.label)
@@ -36,11 +38,99 @@ class CustomItemWidget(QWidget):
         layout.addWidget(self.icon_button)
 
         self.setLayout(layout)
-    def open_website(self):
-        # Redirect to a website
-        self.parent_widget.close_websocket()
 
+    def open_website(self):
+        self.parent_widget.close_websocket()
         QDesktopServices.openUrl(QUrl(self.origin_url))
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Settings")
+        self.setFixedSize(400, 200)
+        self.setStyleSheet("background-color: #18181b; color: #FFFFFF;")
+
+        layout = QFormLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+
+        # Labels to display current paths
+        self.install_path_label = QLabel("Not set")
+        self.install_path_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
+        self.saved_games_path_label = QLabel("Not set")
+        self.saved_games_path_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
+
+        # Buttons to select folders
+        self.install_button = QPushButton("Select Install Folder")
+        self.install_button.setStyleSheet("""
+            QPushButton {
+                color: #FFFFFF;
+                background-color: #252528;
+                border: none;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3c;
+            }
+        """)
+        self.install_button.clicked.connect(self.select_install_folder)
+
+        self.saved_games_button = QPushButton("Select Saved Games Folder")
+        self.saved_games_button.setStyleSheet("""
+            QPushButton {
+                color: #FFFFFF;
+                background-color: #252528;
+                border: none;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3c;
+            }
+        """)
+        self.saved_games_button.clicked.connect(self.select_saved_games_folder)
+
+        # Add widgets to layout
+        layout.addRow("Install Folder:", self.install_path_label)
+        layout.addRow("", self.install_button)
+        layout.addRow("Saved Games Folder:", self.saved_games_path_label)
+        layout.addRow("", self.saved_games_button)
+
+        self.setLayout(layout)
+
+        # Load existing settings if available
+        self.load_settings()
+
+    def select_install_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Select Install Folder")
+        if folder:
+            self.install_path_label.setText(folder)
+            self.save_settings()
+
+    def select_saved_games_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Select Saved Games Folder")
+        if folder:
+            self.saved_games_path_label.setText(folder)
+            self.save_settings()
+
+    def save_settings(self):
+        caesaraigmscrud  = CaesarAIGamesCRUD()
+        settings = Settings.model_validate({"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})git a
+        caesaraigmscrud.post_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME)
+
+
+
+    def load_settings(self):
+        try:
+            with open("settings.json", "r") as f:
+                settings = json.load(f)
+                self.install_path_label.setText(settings.get("install_folder", "Not set"))
+                self.saved_games_path_label.setText(settings.get("saved_games_folder", "Not set"))
+        except FileNotFoundError:
+            pass
 
 class DetailsWidget(QWidget):
     def __init__(self, item, image_cache, main_window, parent=None):
@@ -131,14 +221,12 @@ class DetailsWidget(QWidget):
         self.description_label.setAlignment(Qt.AlignCenter)
         self.description_label.setWordWrap(True)
         content_layout.addWidget(self.description_label)
-        
+
         # Media usage layout for Play and Backup buttons
         self.media_usage_layout = QHBoxLayout()
-        self.media_usage_layout.setContentsMargins(0, 10, 0, 20)  # Adjusted margins for better spacing
-        self.media_usage_layout.setSpacing(10)  # Space between buttons
-        self.media_usage_layout.setAlignment(Qt.AlignLeft)  # Align buttons to the left
-
-
+        self.media_usage_layout.setContentsMargins(0, 10, 0, 20)
+        self.media_usage_layout.setSpacing(10)
+        self.media_usage_layout.setAlignment(Qt.AlignLeft)
 
         # Play button
         play_button = QPushButton("Play")
@@ -147,7 +235,7 @@ class DetailsWidget(QWidget):
         play_button.setStyleSheet("""
             QPushButton {
                 color: #FFFFFF;
-                background-color: #28a745;  /* Green background for Play */
+                background-color: #28a745;
                 border: none;
                 border-radius: 6px;
                 padding: 8px;
@@ -155,7 +243,7 @@ class DetailsWidget(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #218838;  /* Darker green on hover */
+                background-color: #218838;
             }
         """)
         play_button.setIcon(QIcon("imgs/play.png"))
@@ -165,79 +253,77 @@ class DetailsWidget(QWidget):
 
         # Backup button (icon-only)
         backup_button = QPushButton()
-        backup_button.setFixedSize(32, 32)  # Set size to fit the icon
+        backup_button.setFixedSize(32, 32)
         backup_button.setCursor(QCursor(Qt.PointingHandCursor))
-        backup_button.setFlat(True)  # Remove button shape
+        backup_button.setFlat(True)
         backup_button.setStyleSheet("""
             QPushButton {
-                background-color: transparent;  /* No background */
-                border: none;  /* No border */
-                padding: 0px;  /* No padding */
+                background-color: transparent;
+                border: none;
+                padding: 0px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
-                border-radius: 6px;  /* Rounded hover effect */
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
             }
         """)
         backup_button.setIcon(QIcon("imgs/cloud_backup.png"))
-        backup_button.setIconSize(QSize(24, 24))  # Adjust icon size
-        backup_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        backup_button.setIconSize(QSize(24, 24))
+        backup_button.clicked.connect(self.play_game)
         self.media_usage_layout.addWidget(backup_button)
 
-        # Backup button (icon-only)
+        # Library button (icon-only)
         library_button = QPushButton()
-        library_button.setFixedSize(32, 32)  # Set size to fit the icon
+        library_button.setFixedSize(32, 32)
         library_button.setCursor(QCursor(Qt.PointingHandCursor))
-        library_button.setFlat(True)  # Remove button shape
+        library_button.setFlat(True)
         library_button.setStyleSheet("""
             QPushButton {
-                background-color: transparent;  /* No background */
-                border: none;  /* No border */
-                padding: 0px;  /* No padding */
+                background-color: transparent;
+                border: none;
+                padding: 0px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
-                border-radius: 6px;  /* Rounded hover effect */
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
             }
         """)
         library_button.setIcon(QIcon("imgs/not_saved.png"))
-        library_button.setIconSize(QSize(24, 24))  # Adjust icon size
-        library_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        library_button.setIconSize(QSize(24, 24))
+        library_button.clicked.connect(self.play_game)
         self.media_usage_layout.addWidget(library_button)
 
         # Add stretch to push buttons to the left
         self.media_usage_layout.addStretch()
-        
-        # Backup button (icon-only)
+
+        # Settings button (icon-only)
         settings_button = QPushButton()
-        settings_button.setFixedSize(32, 32)  # Set size to fit the icon
+        settings_button.setFixedSize(32, 32)
         settings_button.setCursor(QCursor(Qt.PointingHandCursor))
-        settings_button.setFlat(True)  # Remove button shape
+        settings_button.setFlat(True)
         settings_button.setStyleSheet("""
             QPushButton {
-                background-color: transparent;  /* No background */
-                border: none;  /* No border */
-                padding: 0px;  /* No padding */
+                background-color: transparent;
+                border: none;
+                padding: 0px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
-                border-radius: 6px;  /* Rounded hover effect */
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 6px;
             }
         """)
         settings_button.setIcon(QIcon("imgs/settings.png"))
-        settings_button.setIconSize(QSize(24, 24))  # Adjust icon size
-        settings_button.clicked.connect(self.play_game)  # Update to appropriate method if needed
+        settings_button.setIconSize(QSize(24, 24))
+        settings_button.clicked.connect(self.show_settings_dialog)
         self.media_usage_layout.addWidget(settings_button)
 
-
         content_layout.addLayout(self.media_usage_layout)
-
 
         # Streams container
         self.streams_label = QLabel("Streaming Options")
         self.streams_label.setStyleSheet("color: #FFFFFF; font-size: 20px; font-weight: bold; font-family: Arial, sans-serif;")
         self.streams_label.setAlignment(Qt.AlignLeft)
-        self.streams_label.hide()  # Hidden until streams are loaded
+        self.streams_label.hide()
         content_layout.addWidget(self.streams_label)
 
         self.streams_list = QListWidget()
@@ -266,8 +352,13 @@ class DetailsWidget(QWidget):
         # Fetch series details
         if item.get("name"):
             self.get_film_details()
+
     def play_game(self):
         pass
+
+    def show_settings_dialog(self):
+        dialog = SettingsDialog(self)
+        dialog.exec_()
 
     def set_rounded_image(self, label, pixmap, radius=10):
         scaled_pixmap = pixmap.scaled(label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -339,7 +430,7 @@ class DetailsWidget(QWidget):
 
     def on_websocket_disconnected(self):
         print("WebSocket disconnected")
-        self.websocket = None
+        #self.websocket = None
 
     def on_websocket_message(self, message):
         try:
@@ -349,12 +440,8 @@ class DetailsWidget(QWidget):
             if event.get("games"):
                 games_data = event.get("games", {}).get("data", {}).get("games", [])
                 self.total_streams = data.get("total", 0)
-                # Append each episode/stream to self.streams as individual items
                 self.streams.append(games_data)
                 self.update_streams_list()
-            #elif event.get("close"):
-            #    self.close_websocket()
-            #    self.streams_label.setText("Stream loading completed")
         except json.JSONDecodeError as e:
             print(f"WebSocket message parse error: {e}")
             self.streams_label.setText("Error parsing stream data")
@@ -373,18 +460,20 @@ class DetailsWidget(QWidget):
             self.streams_list.hide()
             return
 
-        for stream in self.streams:
-            print("Stream:",stream)
+        for ind,stream in enumerate(self.streams):
+            if ind > 60:
+                self.websocket.close()
+                break
+            print("Stream:", stream)
             torrent_title = stream.get("title", "Unknown")
             seeders = stream.get("seeders", "Unknown")
-            magnet_link = stream.get("magnet_link","No Magnet")
-            origin_url = stream.get("guid","No Origin")
+            magnet_link = stream.get("magnet_link", "No Magnet")
+            origin_url = stream.get("guid", "No Origin")
             display_text = f"{torrent_title} | Seeders:{seeders}"
             item = QListWidgetItem()
-            item.setData(Qt.UserRole, magnet_link)  # Store stream_id for later use
+            item.setData(Qt.UserRole, magnet_link)
 
-            item_widget = CustomItemWidget(display_text, "imgs/world-wide-web.png",origin_url,self,)  # Replace with your icon path
-
+            item_widget = CustomItemWidget(display_text, "imgs/world-wide-web.png", origin_url, self)
             self.streams_list.addItem(item)
             self.streams_list.setItemWidget(item, item_widget)
 
@@ -398,26 +487,15 @@ class DetailsWidget(QWidget):
     def close_websocket(self):
         if self.websocket:
             self.websocket.close()
-            #self.websocket.deleteLater()
-            #self.websocket = None
 
-    def get_torrenting(self,magnet_link):
+    def get_torrenting(self, magnet_link):
         self.close_websocket()
-        print("Streams:",magnet_link)
+        print("Streams:", magnet_link)
         print("Torrenting...")
-        response = requests.post("https://movies.caesaraihub.org/api/v1/torrent_magnet",json={"torrent_link":magnet_link})
+        response = requests.post("https://movies.caesaraihub.org/api/v1/torrent_magnet", json={"torrent_link": magnet_link})
         data = response.json()
         print("Finished Torrenting.")
         _id = data["id"]
-        response = requests.get("https://movies.caesaraihub.org/api/v1/get_container_links",params={"_id":_id})
+        response = requests.get("https://movies.caesaraihub.org/api/v1/get_container_links", params={"_id": _id})
         streams = response.json()
         print(streams)
-        # TODO Add Guid to be clickable then it will redirect me to the home page then I can check if it is malware and safe.
-        # TODO Malware Scanner https://github.com/king04aman/Malware-Scanner
-
-        # Uncomment to save to file if needed
-        # with open("current_stream.json", "w") as f:
-        #     json.dump(data, f)
-
-        # Optionally close WebSocket if stream selection ends the process
-        # self.close_websocket()

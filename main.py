@@ -14,6 +14,7 @@ from PyQt5.QtWebSockets import QWebSocket
 from MediaPlayer import MediaPlayer
 from widgets import ContentWidget,DetailsWidget,LibraryWidget,DiscoverWidget,CalendarWidget
 # TMDb API key
+from services.DB import CaesarAIGamesCreateTables,CaesarAIGamesCRUD
 TMDB_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZTlkOTQ4OWE1MzMwMGI4ZGE4NTBlNjM0OTQ3NWM1MiIsIm5iZiI6MTcwNTM1MDU2Ni44LCJzdWIiOiI2NWE1OTVhNmQwNWEwMzAwYzhhOWViYzYiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.Co9vbQKxQUwV5sbON3CzQ3jUPHBvwMRrkFVn3V8WNzE"
 
 
@@ -43,6 +44,9 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("background-color: #18181b;")
         self.setMinimumSize(1900, 1080)
         self.setWindowIcon(QIcon("imgs/CaesarAIMoviesLogo.png"))  # Replace with your icon path
+        caesaraigmscrud = CaesarAIGamesCRUD()
+
+        CaesarAIGamesCreateTables().create(caesaraigmscrud=caesaraigmscrud)
 
         # Make the window frameless
         self.setWindowFlags(Qt.FramelessWindowHint)
