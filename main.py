@@ -24,8 +24,10 @@ TMDB_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmZTlkOTQ4OWE1MzMwMGI4ZGE4NTBlNjM
         #self.go_back()  # Return to previous view
 class Home(ContentWidget):
     def __init__(self, main_window):
-        super().__init__("movie/popular", main_window)
-
+        super().__init__("api/v1/popular_games", main_window)
+class SearchWidget(ContentWidget):
+    def __init__(self, main_window,search_query):
+        super().__init__(f"api/v1/search_game", main_window,search_query)
 class AnimeWidget(ContentWidget):
     def __init__(self, main_window):
         super().__init__("discover/tv?with_genres=16&with_keywords=210024|287501&first_air_date.gte=2015-03-10", main_window)
@@ -33,6 +35,8 @@ class AnimeWidget(ContentWidget):
 class SeriesWidget(ContentWidget):
     def __init__(self, main_window):
         super().__init__("tv/top_rated", main_window)
+
+
 
 
 
@@ -503,14 +507,27 @@ class MainWindow(QMainWindow):
         self.content_stack.setCurrentIndex(self.content_stack.count() - 1)  # Show details
 
     def add_search_query(self):
-        query = self.search_bar.text().strip()
-        if query and query not in self.search_history:
-            self.search_history.append(query)
-            if len(self.search_history) > 10:
-                self.search_history.pop(0)
-            self.update_search_history_list()
+        query = self.search_bar.text().strip()    
+        self.previous_index = self.content_stack.currentIndex()  # Save current index
+        # Hide navigation bars and search bar
+        self.button_container.hide()  # Hide left nav buttons (keep logo)
+        self.content_nav.hide()  # Hide content nav bar
+        self.search_container.hide()  # Hide search bar
+        # Create a new DetailsWidget with the selected item
+        self.content_stack.removeWidget(self.details_widget)
+        self.details_widget = SearchWidget(self,query)
+        self.content_stack.addWidget(self.details_widget)
+        self.content_stack.setCurrentIndex(self.content_stack.count() - 1)  # Show details
+
+
+       #
+       #  #if query and query not in self.search_history:
+        #    self.search_history.append(query)
+        #    if len(self.search_history) > 10:
+        #        self.search_history.pop(0)
+        #    self.update_search_history_list()
         # Placeholder for actual search functionality
-        print(f"Searching for: {query}")
+        #print(f"Searching for: {query}")
 
     def update_search_history_list(self):
         self.search_history_list.clear()

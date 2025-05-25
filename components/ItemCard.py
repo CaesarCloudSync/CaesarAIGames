@@ -49,13 +49,15 @@ class ItemCard(QWidget):
 
         self.setLayout(layout)
 
-        image_id = self.item.get("cover","").get("image_id","")
-        if image_id in self.image_cache:
-            poster_path = "/" + self.item.get("cover","").get("image_id","")  +".jpg"
-            self.set_rounded_image(self.image_cache[poster_path])
-            self.image_loaded = True
-        else:
-            QTimer.singleShot(0, self.fetch_image_async)
+        cover = self.item.get("cover","")
+        if cover:
+            image_id =cover.get("image_id","")
+            if image_id in self.image_cache:
+                poster_path = "/" + self.item.get("cover","").get("image_id","")  +".jpg"
+                self.set_rounded_image(self.image_cache[poster_path])
+                self.image_loaded = True
+            else:
+                QTimer.singleShot(0, self.fetch_image_async)
 
         # Make the poster clickable
         self.poster_label.mousePressEvent = self.on_poster_clicked
@@ -79,20 +81,22 @@ class ItemCard(QWidget):
 
     def fetch_image_async(self):
         if not self.image_loaded:
-            poster_path = "/" + self.item["cover"]["image_id"] +".jpg"
-            image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
-            request = QNetworkRequest(QUrl(image_url))
-            self.network_manager.get(request)
-            self.image_loaded = True
+            if self.item.get("cover"):
+                poster_path = "/" + self.item["cover"]["image_id"] +".jpg"
+                image_url = f"https://images.igdb.com/igdb/image/upload/t_cover_big{poster_path}"
+                request = QNetworkRequest(QUrl(image_url))
+                self.network_manager.get(request)
+                self.image_loaded = True
 
     def on_image_fetched(self, reply):
         if reply.error() == QNetworkReply.NoError:
             image_data = reply.readAll()
             pixmap = QPixmap()
             pixmap.loadFromData(image_data)
-            poster_path = "/" + self.item["cover"]["image_id"] +".jpg"
-            self.image_cache[poster_path] = pixmap
-            self.set_rounded_image(pixmap)
+            if self.item.get("cover"):
+                poster_path = "/" + self.item["cover"]["image_id"] +".jpg"             
+                self.image_cache[poster_path] = pixmap
+                self.set_rounded_image(pixmap)
         else:
             print(f"Failed to load image: {reply.errorString()}")
         reply.deleteLater()

@@ -1,17 +1,18 @@
 import json
 from components import ItemCard
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QScrollArea
+    QWidget, QVBoxLayout, QHBoxLayout, QScrollArea,QPushButton
 )
 from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QCursor
 
 class ContentWidget(QWidget):
-    def __init__(self, api_endpoint, main_window):
+    def __init__(self, api_endpoint, main_window,search_query=""):
         super().__init__()
         self.api_endpoint = api_endpoint
         self.main_window = main_window
+        self.search_query = search_query
         self.page_num = 1
         self.items = []
         self.is_loading = False
@@ -56,6 +57,28 @@ class ContentWidget(QWidget):
             }
         """)
         self.scroll_area.verticalScrollBar().valueChanged.connect(self.on_scroll)
+                # Back button
+        if search_query != "":
+            back_button = QPushButton("Back")
+            back_button.setFixedWidth(100)
+            back_button.setCursor(QCursor(Qt.PointingHandCursor))
+            back_button.setStyleSheet("""
+                QPushButton {
+                    color: #FFFFFF;
+                    background-color: #252528;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px;
+                    font-size: 16px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #3a3a3c;
+                }
+            """)
+            back_button.clicked.connect(self.go_back)
+            layout.addWidget(back_button, alignment=Qt.AlignLeft)
+
 
         self.carousel_widget = QWidget()
         self.carousel_layout = QVBoxLayout()
@@ -70,12 +93,18 @@ class ContentWidget(QWidget):
 
         self.current_row_items = []  # Track items for the current row
         self.load_items()
+    
+    def go_back(self):
+        self.main_window.content_stack.setCurrentIndex(self.main_window.previous_index)
+        self.main_window.button_container.show()
+        self.main_window.content_nav.show()
+        self.main_window.search_container.show()
 
     def load_items(self):
         if self.is_loading:
             return
         self.is_loading = True
-        url = f"https://games.caesaraihub.org/api/v1/popular_games?offset={self.page_num * 20}&limit=20"
+        url = f"https://games.caesaraihub.org/{self.api_endpoint}?offset={self.page_num * 20}&limit=20&game={self.search_query}"
         print(url)
         request = QNetworkRequest(QUrl(url))
         self.network_manager.get(request)
@@ -108,7 +137,7 @@ class ContentWidget(QWidget):
             self.current_row_items = []
 
     def preload_next_page(self):
-        url = f"https://games.caesaraihub.org/api/v1/popular_games?offset={self.page_num * 20}&limit=20"
+        url = f"https://games.caesaraihub.org/{self.api_endpoint}?offset={self.page_num * 20}&limit=20&game={self.search_query}"
         request = QNetworkRequest(QUrl(url))
         self.network_manager.get(request)
 
