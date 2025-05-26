@@ -104,6 +104,8 @@ class ContentWidget(QWidget):
         if self.is_loading:
             return
         self.is_loading = True
+        if self.search_query != "":
+            self.page_num = 0
         url = f"https://games.caesaraihub.org/{self.api_endpoint}?offset={self.page_num * 20}&limit=20&game={self.search_query}"
         print(url)
         request = QNetworkRequest(QUrl(url))
@@ -137,6 +139,8 @@ class ContentWidget(QWidget):
             self.current_row_items = []
 
     def preload_next_page(self):
+        if self.search_query != "":
+            self.page_num = 0
         url = f"https://games.caesaraihub.org/{self.api_endpoint}?offset={self.page_num * 20}&limit=20&game={self.search_query}"
         request = QNetworkRequest(QUrl(url))
         self.network_manager.get(request)
