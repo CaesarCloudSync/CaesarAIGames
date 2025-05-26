@@ -3,3 +3,4 @@ vlc-3.0.21/
 __pycache__/
 *.mp4
 *.mkv
+*.log
