@@ -44,8 +44,11 @@ class CustomItemWidget(QWidget):
         QDesktopServices.openUrl(QUrl(self.origin_url))
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, item,parent=None):
         super().__init__(parent)
+        self.item = item
+        self.title = self.item.get("name")
+        self.condition = f"game_name = '{self.title}'"
         self.setWindowTitle("Settings")
         self.setFixedSize(400, 200)
         self.setStyleSheet("background-color: #18181b; color: #FFFFFF;")
@@ -118,17 +121,31 @@ class SettingsDialog(QDialog):
 
     def save_settings(self):
         caesaraigmscrud  = CaesarAIGamesCRUD()
-        settings = Settings.model_validate({"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})
-        caesaraigmscrud.post_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME)
+
+        settings = Settings.model_validate({"game_name":self.title,"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})
+        settings_exists = caesaraigmscrud.check_exists(("*"),Settings.SETTINGSTABLENAME,self.condition)
+        if not settings_exists:
+            caesaraigmscrud.post_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME)
+        else:
+            caesaraigmscrud.update_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME,self.condition)
 
 
 
     def load_settings(self):
         try:
-            with open("settings.json", "r") as f:
-                settings = json.load(f)
-                self.install_path_label.setText(settings.get("install_folder", "Not set"))
-                self.saved_games_path_label.setText(settings.get("saved_games_folder", "Not set"))
+            caesaraigmscrud  = CaesarAIGamesCRUD()
+            
+            settings_exists = caesaraigmscrud.check_exists(("*"),Settings.SETTINGSTABLENAME,self.condition)
+            if settings_exists:
+                game_settings  = Settings.model_validate(caesaraigmscrud.get_data(Settings.fields_to_tuple(),Settings.SETTINGSTABLENAME,self.condition)[0])
+                
+                
+                self.install_path_label.setText(game_settings.install_folder)
+                self.saved_games_path_label.setText(game_settings.saved_games_folder)
+            else:
+                self.install_path_label.setText("Not set")
+                self.saved_games_path_label.setText("Not set")
+
         except FileNotFoundError:
             pass
 
@@ -136,6 +153,7 @@ class DetailsWidget(QWidget):
     def __init__(self, item, image_cache, main_window, parent=None):
         super().__init__(parent)
         self.item = item
+        #print(item)
         self.image_cache = image_cache
         self.main_window = main_window
         self.seasons = []
@@ -357,7 +375,7 @@ class DetailsWidget(QWidget):
         pass
 
     def show_settings_dialog(self):
-        dialog = SettingsDialog(self)
+        dialog = SettingsDialog(self.item,self)
         dialog.exec_()
 
     def set_rounded_image(self, label, pixmap, radius=10):
