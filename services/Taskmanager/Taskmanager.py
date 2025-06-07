@@ -1,7 +1,7 @@
 import os
 import time
 import psutil
-from models import PID
+from services.TaskManager.models import PID
 class TaskManager:
     def __init__(self):
         pass
@@ -64,7 +64,7 @@ class TaskManager:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return None
     # Function to monitor the process
-    def monitor_process(self,pid):
+    def monitor_process(self,pid,callback):
         try:
             # Create a process object using the PID
             process = psutil.Process(pid)
@@ -77,6 +77,7 @@ class TaskManager:
                     # Call a random function when the process stops
                     print("Backing up data...")
                     print("Data backup complete.")
+                    callback()
                     break  # Exit the loop after triggering the event
                 else:
                     print(f"Process {pid} is still running.")

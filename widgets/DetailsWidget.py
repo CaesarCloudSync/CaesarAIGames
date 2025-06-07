@@ -11,7 +11,9 @@ from PyQt5.QtWebSockets import QWebSocket
 from PyQt5.QtGui import QDesktopServices
 import os
 from services.DB import CaesarAIGamesCRUD
-from services.Models import Settings
+from services.Models import Settings,Backup
+from services.TaskManager import TaskManager
+from services.TaskManager.models import PID
 class CustomItemWidget(QWidget):
     def __init__(self, text, icon_path, origin_url, parent=None):
         super().__init__()
@@ -50,7 +52,7 @@ class SettingsDialog(QDialog):
         self.title = self.item.get("name")
         self.condition = f"game_name = '{self.title}'"
         self.setWindowTitle("Settings")
-        self.setFixedSize(400, 200)
+        self.setFixedSize(400, 400)
         self.setStyleSheet("background-color: #18181b; color: #FFFFFF;")
 
         layout = QFormLayout()
@@ -58,12 +60,29 @@ class SettingsDialog(QDialog):
         layout.setSpacing(10)
 
         # Labels to display current paths
+        self.game_exec_label = QLabel("Not set")
+        self.game_exec_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
         self.install_path_label = QLabel("Not set")
         self.install_path_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
         self.saved_games_path_label = QLabel("Not set")
         self.saved_games_path_label.setStyleSheet("color: #FFFFFF; font-size: 14px;")
 
         # Buttons to select folders
+        self.game_exec_button = QPushButton("Select Game Executable")
+        self.game_exec_button.setStyleSheet("""
+            QPushButton {
+                color: #FFFFFF;
+                background-color: #252528;
+                border: none;
+                border-radius: 6px;
+                padding: 8px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a3c;
+            }
+        """)
+        self.game_exec_button.clicked.connect(self.select_game_exec)
         self.install_button = QPushButton("Select Install Folder")
         self.install_button.setStyleSheet("""
             QPushButton {
@@ -97,6 +116,8 @@ class SettingsDialog(QDialog):
         self.saved_games_button.clicked.connect(self.select_saved_games_folder)
 
         # Add widgets to layout
+        layout.addRow("Game Executable:", self.game_exec_label)
+        layout.addRow("", self.game_exec_button)
         layout.addRow("Install Folder:", self.install_path_label)
         layout.addRow("", self.install_button)
         layout.addRow("Saved Games Folder:", self.saved_games_path_label)
@@ -106,12 +127,17 @@ class SettingsDialog(QDialog):
 
         # Load existing settings if available
         self.load_settings()
-
+    def select_game_exec(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select Game Executable","","Executable Files (*.exe);;All Files (*)")  # Filter for executable files)
+        if file_path:
+            self.game_exec_label.setText(file_path)
+            self.save_settings()
     def select_install_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Install Folder")
         if folder:
             self.install_path_label.setText(folder)
             self.save_settings()
+
 
     def select_saved_games_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Saved Games Folder")
@@ -122,7 +148,7 @@ class SettingsDialog(QDialog):
     def save_settings(self):
         caesaraigmscrud  = CaesarAIGamesCRUD()
 
-        settings = Settings.model_validate({"game_name":self.title,"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})
+        settings = Settings.model_validate({"game_name":self.title,"game_exec":self.game_exec_label.text(),"install_folder":self.install_path_label.text(),"saved_games_folder":self.saved_games_path_label.text()})
         settings_exists = caesaraigmscrud.check_exists(("*"),Settings.SETTINGSTABLENAME,self.condition)
         if not settings_exists:
             caesaraigmscrud.post_data(Settings.fields_to_tuple(),settings.values_to_tuple(),Settings.SETTINGSTABLENAME)
@@ -139,10 +165,11 @@ class SettingsDialog(QDialog):
             if settings_exists:
                 game_settings  = Settings.model_validate(caesaraigmscrud.get_data(Settings.fields_to_tuple(),Settings.SETTINGSTABLENAME,self.condition)[0])
                 
-                
+                self.game_exec_label.setText(game_settings.game_exec)
                 self.install_path_label.setText(game_settings.install_folder)
                 self.saved_games_path_label.setText(game_settings.saved_games_folder)
             else:
+                self.game_exec_label.setText("Not set")
                 self.install_path_label.setText("Not set")
                 self.saved_games_path_label.setText("Not set")
 
@@ -153,6 +180,9 @@ class DetailsWidget(QWidget):
     def __init__(self, item, image_cache, main_window, parent=None):
         super().__init__(parent)
         self.item = item
+        if self.item.get("name"):
+            self.title = self.item.get("name")
+            self.condition = f"game_name = '{self.title}'"
         #print(item)
         self.image_cache = image_cache
         self.main_window = main_window
@@ -270,11 +300,11 @@ class DetailsWidget(QWidget):
         self.media_usage_layout.addWidget(play_button)
 
         # Backup button (icon-only)
-        backup_button = QPushButton()
-        backup_button.setFixedSize(32, 32)
-        backup_button.setCursor(QCursor(Qt.PointingHandCursor))
-        backup_button.setFlat(True)
-        backup_button.setStyleSheet("""
+        self.backup_button = QPushButton()
+        self.backup_button.setFixedSize(32, 32)
+        self.backup_button.setCursor(QCursor(Qt.PointingHandCursor))
+        self.backup_button.setFlat(True)
+        self.backup_button.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
                 border: none;
@@ -285,10 +315,19 @@ class DetailsWidget(QWidget):
                 border-radius: 6px;
             }
         """)
-        backup_button.setIcon(QIcon("imgs/cloud_backup.png"))
-        backup_button.setIconSize(QSize(24, 24))
-        backup_button.clicked.connect(self.play_game)
-        self.media_usage_layout.addWidget(backup_button)
+        if item.get("name"):
+            caesaraigmscrud  = CaesarAIGamesCRUD()
+            title = self.item.get("name")
+            condition = f"game_name = '{title}'"
+            backup_exists = caesaraigmscrud.check_exists(("*"),Backup.BACKUPTABLENAME,condition)
+            if backup_exists:
+                self.backup_button.setIcon(QIcon("imgs/cloud.png"))
+            else:
+                self.backup_button.setIcon(QIcon("imgs/cloud_backup.png"))
+    
+        self.backup_button.setIconSize(QSize(24, 24))
+        self.backup_button.clicked.connect(self.backup)
+        self.media_usage_layout.addWidget(self.backup_button)
 
         # Library button (icon-only)
         library_button = QPushButton()
@@ -368,11 +407,45 @@ class DetailsWidget(QWidget):
         self.setLayout(main_layout)
 
         # Fetch series details
-        if item.get("name"):
-            self.get_film_details()
+        #if item.get("name"):
+        #    self.get_film_details()
+    def start_backup(self):
+        caesaraigmscrud  = CaesarAIGamesCRUD()
+
+        backup_exists = caesaraigmscrud.check_exists(("*"),Backup.BACKUPTABLENAME,self.condition)
+        # TODO Google Drive Backup Here
+        
+        settings_exists = caesaraigmscrud.check_exists(("*"),Settings.SETTINGSTABLENAME,self.condition)
+        if settings_exists:
+            game_settings  = Settings.model_validate(caesaraigmscrud.get_data(Settings.fields_to_tuple(),Settings.SETTINGSTABLENAME,self.condition)[0])
+            saved_games_folder = game_settings.saved_games_folder
+            print("Google Drive Backed up...",saved_games_folder)
+            backup = Backup.model_validate({"game_name":self.title,"status":"success"})
+            if not backup_exists:
+                caesaraigmscrud.post_data(Backup.fields_to_tuple(),backup.values_to_tuple(),Backup.BACKUPTABLENAME)
+            else:
+                caesaraigmscrud.update_data(Backup.fields_to_tuple(),backup.values_to_tuple(),Backup.BACKUPTABLENAME,self.condition)
+
 
     def play_game(self):
-        pass
+        caesaraigmscrud  = CaesarAIGamesCRUD()
+        if self.condition:
+            settings_exists = caesaraigmscrud.check_exists(("*"),Settings.SETTINGSTABLENAME,self.condition)
+            if settings_exists:
+                game_settings  = Settings.model_validate(caesaraigmscrud.get_data(Settings.fields_to_tuple(),Settings.SETTINGSTABLENAME,self.condition)[0])
+                game_exec = game_settings.game_exec
+                tm = TaskManager()
+                tm.run_game(game_exec)
+                processinfo: PID = tm.find_process_by_filename(os.path.basename(game_exec))
+                tm.monitor_process(processinfo.pid,self.start_backup) # TODO Find the correct way to monitor in an event loop, also do the library too.
+                self.backup_button.setIcon(QIcon("imgs/cloud.png"))
+    def backup(self):
+        if self.condition:
+            self.start_backup()   
+            self.backup_button.setIcon(QIcon("imgs/cloud.png"))
+             
+
+
 
     def show_settings_dialog(self):
         dialog = SettingsDialog(self.item,self)

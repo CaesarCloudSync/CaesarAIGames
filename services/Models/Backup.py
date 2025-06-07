@@ -5,20 +5,15 @@ import uuid
 from typing import Optional
 import hashlib
 from typing import ClassVar,Literal,Union
-class Settings(BaseModel):
-    SETTINGSTABLENAME: ClassVar[str] = "settings"
-    settings_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+class Backup(BaseModel):
+    BACKUPTABLENAME: ClassVar[str] = "backup"
+    backup_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     game_name :str
-    game_exec:str
-    install_folder: str
-    saved_games_folder:str
-    SETTINGSDATATYPES: ClassVar[tuple] = (
-            "TEXT PRIMARY KEY",      # settings_id as UUID (TEXT NOT NULL format)
-             "TEXT NOT NULL",   
-            "TEXT NOT NULL",                  # first_name as TEXT NOT NULL
-            "TEXT NOT NULL",                  # last_name as TEXT NOT NULL
-            "TEXT NOT NULL",
-            "TEXT NOT NULL",
+    status:str
+    BACKUPDATATYPES: ClassVar[tuple] = (
+            "TEXT PRIMARY KEY",      # Backup_id as UUID (TEXT NOT NULL format)
+            "TEXT NOT NULL",   
+            "TEXT NOT NULL"
         )
     
     @classmethod
