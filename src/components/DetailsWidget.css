@@ -1,0 +1,151 @@
+.details-widget {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: #18181b;
+}
+
+.details-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.details-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.details-title {
+  color: #FFFFFF;
+  font-size: 28px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.details-poster {
+  width: 264px;
+  height: 352px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.details-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.details-description {
+  color: #FFFFFF;
+  font-size: 20px;
+  text-align: center;
+  max-width: 800px;
+  line-height: 1.6;
+}
+
+.details-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px 0;
+}
+
+.play-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.play-button:hover {
+  background-color: #218838;
+}
+
+.play-button img {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.streams-section {
+  width: 100%;
+  max-width: 800px;
+}
+
+.streams-section h2 {
+  color: #FFFFFF;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.streams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stream-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #252528;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.stream-item:hover {
+  background-color: #3a3a3c;
+}
+
+.stream-item span {
+  color: #FFFFFF;
+  flex: 1;
+}
+
+.stream-item .seeders {
+  color: #888;
+  font-size: 14px;
+}
+
+.stream-icon {
+  width: 24px;
+  height: 24px;
+}

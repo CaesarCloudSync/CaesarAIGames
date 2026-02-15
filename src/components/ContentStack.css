@@ -1,0 +1,13 @@
+.content-stack {
+  flex: 1;
+  overflow: hidden;
+}
+
+.placeholder-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #FFFFFF;
+  font-size: 24px;
+}
